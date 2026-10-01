@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>KALEIDXSCOPE · ???</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh;
+    background: radial-gradient(ellipse at 30% 20%, #0a0f1e, #010101);
+    font-family: 'Segoe UI','Orbitron',monospace;
+    display:flex; align-items:center; justify-content:center;
+    padding:2rem; position:relative; overflow-x:hidden;
+    transition: all .6s;
+  }
+  body::before {
+    content:''; position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,70,100,.12) 1px, transparent 1px);
+    background-size:36px 36px; pointer-events:none;
+    animation: flicker 4s infinite; z-index:0;
+  }
+  @keyframes flicker { 0%,100%{opacity:.2} 50%{opacity:.6} }
+
+  .main {
+    max-width:880px; width:100%;
+    background: rgba(6,10,24,.75);
+    backdrop-filter: blur(14px);
+    border-radius:3rem;
+    border:1px solid rgba(255,80,120,.7);
+    box-shadow:0 30px 50px rgba(0,0,0,.7);
+    padding:2rem 2rem 2.5rem;
+    z-index:2; position:relative;
+  }
+
+  .title {
+    text-align:center;
+    font-size: clamp(2.5rem,10vw,4.7rem);
+    font-weight:900; letter-spacing:6px;
+    background: linear-gradient(125deg,#ffb3c6,#ff4d6d,#c9184a,#ff8c9e);
+    background-size:250% auto;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: shift 5s infinite alternate;
+  }
+  @keyframes shift { 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
+
+  .subtitle {
+    text-align:center; font-size:.7rem; letter-spacing:3px;
+    color:#ffafc2; background:#00000055; display:inline-block;
+    margin:0 auto 1.8rem; padding:.3rem 1.4rem; border-radius:60px;
+  }
+
+  .timer {
+    display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
+    background: rgba(0,0,0,.55); border-radius:2rem;
+    padding:1.2rem .8rem; margin:1rem 0 1.8rem;
+    border:1px solid #ff6b8233;
+  }
+  .block {
+    background:#03060fe0; border-radius:1.6rem;
+    padding:.8rem .2rem; min-width:90px; flex:1; text-align:center;
+    border-bottom:2px solid #ff667f;
+  }
+  .num {
+    font-size: clamp(2.2rem,7vw,4rem); font-weight:800;
+    background: linear-gradient(145deg,#fff,#ffb9c7);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .label { font-size:.7rem; text-transform:uppercase; color:#ff99ad; }
+
+  .upload {
+    margin:2rem 0 1.5rem;
+    background: rgba(0,0,0,.45); border-radius:2rem;
+    padding:1rem; border:2px dashed #ff6f89; text-align:center;
+  }
+  .upload label { cursor:pointer; color:#ffbfcc; }
+  .upload input { display:none; }
+
+  .badge { text-align:center; margin-top:.8rem; font-size:.85rem; font-weight:bold; }
+  .error { color:#ff7b6e; background:#2f0b12b3; padding:.3rem; border-radius:30px; }
+  .success { color:#baffe6; background:#0f2a1eb3; padding:.3rem; border-radius:30px; }
+
+  .hidden { display:none; }
+
+  .final {
+    position:fixed; inset:0;
+    background: radial-gradient(circle at center,#0a0015,#000);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:9999; color:#ffc8e0; text-align:center; padding:2rem;
+    animation: fadein 1.2s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes fadein { 0%{opacity:0; letter-spacing:8px; filter:blur(10px)} 100%{opacity:1; letter-spacing:normal; filter:blur(0)} }
+
+  .final-title {
+    font-size: clamp(1.5rem,7vw,3rem); font-weight:900; letter-spacing:4px;
+    background: linear-gradient(135deg,#ffd6e0,#ff6f91);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:1.4rem;
+  }
+  .final-msg {
+    font-size:1.1rem; max-width:600px;
+    background: rgba(255,50,100,.18); padding:1rem 1.8rem;
+    border-radius:60px; border-left:3px solid #ff5f8f;
+    border-right:3px solid #ff5f8f;
+  }
+</style>
+</head>
+<body>
+
+<div class="main" id="main">
+  <div class="title">KALEIDXSCOPE</div>
+  <div style="text-align:center">
+    <span class="subtitle">// 棱镜塔 · 记录 //</span>
+  </div>
+
+  <div class="timer">
+    <div class="block"><div class="num" id="d">00</div><div class="label">DAYS</div></div>
+    <div class="block"><div class="num" id="h">00</div><div class="label">HOURS</div></div>
+    <div class="block"><div class="num" id="m">00</div><div class="label">MINUTES</div></div>
+    <div class="block"><div class="num" id="s">00</div><div class="label">SECONDS</div></div>
+  </div>
+
+  <div class="upload" id="upload">
+    <label>
+      <div>📀 上传圣遗物</div>
+      <div id="filename" style="font-size:.8rem; margin-top:.5rem;">未选择文件 (仅 ***.mp4 可解码)</div>
+      <input type="file" id="fileInput" accept="video/mp4,.mp4">
+    </label>
+    <div class="badge" id="validation">⚠️ 等待上传</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ===== 1. 倒计时终点：先占位，等表门通过后再改 =====
+  // 不要写希望之门。先设一个中性的近期时间，比如国庆假期结束
+  const TARGET = new Date(2026, 9, 7, 23, 59, 59); // 2026年10月7日
+
+  // ===== 2. 验证规则 =====
+  const VALID_NAME = 'LAST.mp4';
+  // ===== 3. 终末画面内容：不剧透 =====
+  const FINAL_TITLE = '棱镜塔 · 记录';
+  const FINAL_MSG = '表门尚未通过。挑战仍在继续。';
+
+  let cleared = false;
+  const $ = id => document.getElementById(id);
+
+  function tick(){
+    if (cleared) return;
+    const diff = TARGET - new Date();
+    if (diff <= 0) return reveal();
+    const t = Math.floor(diff/1000);
+    $('d').innerText = String(Math.floor(t/86400)).padStart(2,'0');
+    $('h').innerText = String(Math.floor(t%86400/3600)).padStart(2,'0');
+    $('m').innerText = String(Math.floor(t%3600/60)).padStart(2,'0');
+    $('s').innerText = String(t%60).padStart(2,'0');
+  }
+
+  function reveal(){
+    cleared = true;
+    document.body.innerHTML = `
+      <div class="final">
+        <div class="final-title">${FINAL_TITLE}</div>
+        <div class="final-msg">${FINAL_MSG}</div>
+      </div>`;
+    console.log('%c —— 棱镜塔记录已封存 ——', 'color:#ff66aa;font-size:14px');
+  }
+
+  $('fileInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    const v = $('validation');
+    if (!f) return;
+    $('filename').innerText = `选定: ${f.name} | ${(f.size/1024).toFixed(1)} KB`;
+    if (f.name === VALID_NAME){
+      v.className = 'badge success';
+      v.innerText = '✅ 验证通过 · 「***.mp4」已被棱镜塔接纳';
+    } else {
+      v.className = 'badge error';
+      v.innerText = `❌ 无效文件，必须为 ${VALID_NAME}`;
+    }
+  });
+
+  setInterval(tick, 1000);
+  tick();
+})();
+</script>
+</body>
+</html>
