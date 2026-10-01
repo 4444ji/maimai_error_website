@@ -131,15 +131,12 @@
 
 <script>
 (function(){
-  // ===== 1. 倒计时终点：先占位，等表门通过后再改 =====
-  // 不要写希望之门。先设一个中性的近期时间，比如国庆假期结束
-  const TARGET = new Date(2026, 9, 7, 23, 59, 59); // 2026年10月7日
+  const TARGET = new Date(2026, 9, 3, 23, 59, 59);
 
-  // ===== 2. 验证规则 =====
+  
   const VALID_NAME = 'LAST.mp4';
-  // ===== 3. 终末画面内容：不剧透 =====
   const FINAL_TITLE = '棱镜塔 · 记录';
-  const FINAL_MSG = '表门尚未通过。挑战仍在继续。';
+  const FINAL_MSG = '表门****。挑战仍****';
 
   let cleared = false;
   const $ = id => document.getElementById(id);
@@ -162,7 +159,7 @@
         <div class="final-title">${FINAL_TITLE}</div>
         <div class="final-msg">${FINAL_MSG}</div>
       </div>`;
-    console.log('%c —— 棱镜塔记录已封存 ——', 'color:#ff66aa;font-size:14px');
+    console.log('%c —— 棱镜塔记录已** ——', 'color:#ff66aa;font-size:14px');
   }
 
   $('fileInput').addEventListener('change', e => {
